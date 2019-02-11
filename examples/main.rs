@@ -8,7 +8,6 @@ fn main() {
         .timeout(time::Duration::from_secs(10))
         .connect()
         .unwrap();
-    println!("Client: {:?}", client);
 
     client.use_("urls").unwrap();
 }

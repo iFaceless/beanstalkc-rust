@@ -26,22 +26,38 @@ Full documentation can be found [here]().
 # Usage
 ## Producer
 ```rust
-use beanstalkc;
+use beanstalkc::Beanstalkc;
+use std::time;
 
 fn main() {
-    let client = beanstalkc::connect("localhost", 11300).unwrap();
-    client.use("jobs")
+    let mut client = Beanstalkc::new()
+        .host("127.0.0.1")
+        .port(11300)
+        .timeout(time::Duration::from_secs(10))
+        .connect()
+        .unwrap();
+
+    client.use_("jobs").unwrap();
+    client.put("job_a", 0, 0).unwrap();
 }
 ```
 
 ## Consumer
 
 ```rust
-use beanstalkc;
+use beanstalkc::Beanstalkc;
+use std::time;
 
 fn main() {
-    let client = beanstalkc::connect("localhost", 11300).unwrap();
-    client.use("jobs")
+    let mut client = Beanstalkc::new()
+        .host("127.0.0.1")
+        .port(11300)
+        .timeout(time::Duration::from_secs(10))
+        .connect()
+        .unwrap();
+
+    client.use_("jobs").unwrap();
+    let job = client.reserve().unwrap();
 }
 ```
 
