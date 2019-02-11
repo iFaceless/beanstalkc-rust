@@ -1,3 +1,14 @@
+use beanstalkc::Beanstalkc;
+use std::time;
+
 fn main() {
-    println!("hello, world");
+    let mut client = Beanstalkc::new()
+        .host("127.0.0.1")
+        .port(11300)
+        .timeout(time::Duration::from_secs(10))
+        .connect()
+        .unwrap();
+    println!("Client: {:?}", client);
+
+    client.use_("urls").unwrap();
 }

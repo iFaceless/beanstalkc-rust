@@ -5,3 +5,4 @@ authors = ["iFaceless <christopherlee199398@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bufstream = "0.1.4"
