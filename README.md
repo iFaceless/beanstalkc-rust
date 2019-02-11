@@ -5,7 +5,7 @@ Beanstalkd Client for Rust
 
 *Inspired by project [rust-beanstalkd](https://github.com/schickling/rust-beanstalkd)*
 
-# Why another ONE
+# Why Another ONE
 
 Several repos can be found from [here](https://github.com/search?q=beanstalkd+rust), why not just using one of those directly? The reasons are as follows:
 1. Some of them were poorly documented.
