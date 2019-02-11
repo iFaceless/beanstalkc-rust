@@ -5,10 +5,10 @@ Beanstalkd Client for Rust
 
 # Why another ONE
 
-Several repos can be found from [here](https://github.com/search?q=beanstalkd+rust), why not just using one of those directly? The reason are as follows:
-1. Some of them are poor documented.
-1. Most of them are not actively developed or maintained.
-1. This [rust-beanstalkd](https://github.com/schickling/rust-beanstalkd) repo with the most stars was already out-dated, since not all the beanstalkd commands are supported.
+Several repos can be found from [here](https://github.com/search?q=beanstalkd+rust), why not just using one of those directly? The reasons are as follows:
+1. Some of them were poorly documented.
+1. Some of them were not actively developed or maintained.
+1. This [rust-beanstalkd](https://github.com/schickling/rust-beanstalkd) repo with the most stars was already out-dated, since not all the beanstalkd commands were supported.
 
 # Features
 
@@ -22,7 +22,7 @@ Full documentation can be found [here]().
 
 # Usage
 ## Producer
-```
+```rust
 use beanstalkc;
 
 fn main() {
