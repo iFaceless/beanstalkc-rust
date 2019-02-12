@@ -2,7 +2,6 @@ use beanstalkc::Beanstalkc;
 use std::time;
 
 fn main() {
-
     let mut conn = Beanstalkc::new()
         .host("127.0.0.1")
         .port(11300)
