@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::net::TcpStream;
+use std::net::ToSocketAddrs;
 use std::time::Duration;
 
 use bufstream::BufStream;
@@ -9,7 +10,7 @@ use crate::config::*;
 use crate::errors::BeanstalkcResult;
 use crate::job::Job;
 
-/// `Beanstalkc` provides operations to a beanstalkd sever.
+/// `Beanstalkc` provides beanstalkd client operations.
 #[derive(Debug)]
 pub struct Beanstalkc {
     host: String,
@@ -70,9 +71,17 @@ impl Beanstalkc {
     ///        .unwrap();
     /// ```
     pub fn connect(mut self) -> BeanstalkcResult<Self> {
-        let addr: SocketAddr = format!("{}:{}", self.host, self.port).parse()?;
+        let addr = format!("{}:{}", self.host, self.port);
         let tcp_stream = match self.connection_timeout {
-            Some(timeout) => TcpStream::connect_timeout(&addr, timeout)?,
+            Some(timeout) => {
+                let addresses: Vec<_> = addr
+                    .to_socket_addrs()
+                    .unwrap_or_else(|_| panic!("failed to parse address: {}", addr))
+                    .filter(|x| x.is_ipv4())
+                    .collect();
+                // FIXME: maybe we should try every possible addresses?
+                TcpStream::connect_timeout(&addresses.first().unwrap(), timeout)?
+            }
             None => TcpStream::connect(&addr)?,
         };
         self.stream = Some(BufStream::new(tcp_stream));
