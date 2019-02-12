@@ -3,7 +3,7 @@ Beanstalkd Client for Rust
 
 [Beanstalkd](https://github.com/beanstalkd/beanstalkd) is a fast, general-purpose work queue. [beanstalkc-rust](https://github.com/iFaceless/beanstalkc-rust) is a Beanstalkd Client to communicate with Beanstalkd Server based on the protocol defined [here](./protocol.md).
 
-*Inspired by project [rust-beanstalkd](https://github.com/schickling/rust-beanstalkd)*
+*Inspired by [rust-beanstalkd](https://github.com/schickling/rust-beanstalkd) and [beanstalkc](https://github.com/earl/beanstalkc/).*
 
 # Why Another ONE
 
@@ -17,7 +17,6 @@ Several repos can be found from [here](https://github.com/search?q=beanstalkd+ru
 1. Easy to use
 1. Support custom connection timeout
 1. Support all the commands defined in the [protocol.txt](https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt)
-1. Well documented
 
 # Documentation
 

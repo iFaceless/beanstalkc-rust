@@ -5,14 +5,18 @@ use std::net::AddrParseError;
 #[derive(Debug, Clone)]
 pub enum BeanstalkcError {
     ConnectionError(String),
-    RequestError,
+    UnexpectedResponse(String),
+    CommandFailed(String),
+    RequestError(String),
 }
 
 impl fmt::Display for BeanstalkcError {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let description = match self {
-            BeanstalkcError::ConnectionError(err_msg) => format!("Connection error: {}", err_msg),
-            BeanstalkcError::RequestError => "Request error occurred".to_string(),
+            BeanstalkcError::ConnectionError(msg) => format!("Connection error: {}", msg),
+            BeanstalkcError::UnexpectedResponse(msg) => format!("Unexpected response: {}", msg),
+            BeanstalkcError::CommandFailed(msg) => format!("Command failed: {}", msg),
+            BeanstalkcError::RequestError(msg) => format!("Request error: {}", msg),
         };
 
         write!(formatter, "{}", description)
@@ -21,13 +25,13 @@ impl fmt::Display for BeanstalkcError {
 
 impl From<Error> for BeanstalkcError {
     fn from(err: Error) -> Self {
-        BeanstalkcError::ConnectionError(format!("{}", err))
+        BeanstalkcError::ConnectionError(err.to_string())
     }
 }
 
 impl From<AddrParseError> for BeanstalkcError {
     fn from(err: AddrParseError) -> Self {
-        BeanstalkcError::ConnectionError(format!("{}", err))
+        BeanstalkcError::ConnectionError(err.to_string())
     }
 }
 

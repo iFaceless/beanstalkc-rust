@@ -1,10 +1,9 @@
-mod beanstalkc;
-mod command;
-mod errors;
-mod request;
-mod response;
-
 pub use crate::beanstalkc::Beanstalkc;
+
+mod beanstalkc;
+mod config;
+mod errors;
+mod job;
 
 #[cfg(test)]
 mod tests {
