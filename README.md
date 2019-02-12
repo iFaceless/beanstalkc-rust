@@ -14,9 +14,10 @@ Several repos can be found from [here](https://github.com/search?q=beanstalkd+ru
 
 # Features
 
-1. Easy to use
-1. Support custom connection timeout
-1. Support all the commands defined in the [protocol.txt](https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt)
+1. Easy to use.
+1. Support custom connection timeout.
+1. Support all the commands defined in the [protocol.txt](https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt).
+1. Well documented.
 
 # Documentation
 
@@ -29,15 +30,15 @@ use beanstalkc::Beanstalkc;
 use std::time;
 
 fn main() {
-    let mut client = Beanstalkc::new()
+    let mut conn = Beanstalkc::new()
         .host("127.0.0.1")
         .port(11300)
-        .timeout(time::Duration::from_secs(10))
+        .connection_timeout(Some(time::Duration::from_secs(10)))
         .connect()
-        .unwrap();
+        .expect("connection failed");
 
-    client.use_("jobs").unwrap();
-    client.put("job_a", 0, 0).unwrap();
+    conn.use_tube("jobs").unwrap();
+    conn.put_default("hello, world").unwrap();
 }
 ```
 
@@ -48,15 +49,16 @@ use beanstalkc::Beanstalkc;
 use std::time;
 
 fn main() {
-    let mut client = Beanstalkc::new()
+    let mut conn = Beanstalkc::new()
         .host("127.0.0.1")
         .port(11300)
-        .timeout(time::Duration::from_secs(10))
+        .connection_timeout(Some(time::Duration::from_secs(10)))
         .connect()
-        .unwrap();
+        .expect("connection failed");
 
-    client.use_("jobs").unwrap();
-    let job = client.reserve().unwrap();
+    conn.watch("jobs").unwrap();
+    let job = conn.reserve().expect("failed to reserve job");
+    job.delete().expect("failed to delete job");
 }
 ```
 

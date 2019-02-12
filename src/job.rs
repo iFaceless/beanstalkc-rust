@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::Beanstalkc;
 use crate::config::DEFAULT_JOB_DELAY;
 use crate::config::DEFAULT_JOB_PRIORITY;
 use crate::errors::BeanstalkcResult;
+use crate::Beanstalkc;
 
-/// Job is a simple abstraction about beanstalkd job.
+/// `Job` is a simple abstraction about beanstalkd job.
 #[derive(Debug)]
 pub struct Job<'a> {
     conn: &'a Beanstalkc,
@@ -81,13 +81,12 @@ impl<'a> Job<'a> {
 
     /// Return a dict of statistical information about this job.
     pub fn stats(&self) -> BeanstalkcResult<HashMap<String, String>> {
-        return self.conn.stats_job(self.job_id);
+        self.conn.stats_job(self.job_id)
     }
 
     /// Return the job priority from this job stats. If not found, return the `DEFAULT_JOB_PRIORITY`.
     fn priority(&self) -> u32 {
-        let stats = self.stats()
-            .unwrap_or_else(|_| HashMap::new());
+        let stats = self.stats().unwrap_or_else(|_| HashMap::new());
         match stats.get("pri") {
             None => DEFAULT_JOB_PRIORITY,
             Some(pri) => pri.parse().unwrap_or(DEFAULT_JOB_PRIORITY),

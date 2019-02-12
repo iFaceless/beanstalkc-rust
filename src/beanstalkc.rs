@@ -9,6 +9,7 @@ use crate::config::*;
 use crate::errors::BeanstalkcResult;
 use crate::job::Job;
 
+/// `Beanstalkc` provides operations to a beanstalkd sever.
 #[derive(Debug)]
 pub struct Beanstalkc {
     host: String,
@@ -30,21 +31,21 @@ impl Beanstalkc {
     }
 
     /// Change host to beanstalkd server.
-    pub fn host(mut self, h: &str) -> Self {
-        self.host = h.to_string();
+    pub fn host(mut self, host: &str) -> Self {
+        self.host = host.to_string();
         self
     }
 
     /// Change port to beanstalkd server.
-    pub fn port(mut self, p: u16) -> Self {
-        self.port = p;
+    pub fn port(mut self, port: u16) -> Self {
+        self.port = port;
         self
     }
 
     /// Set timeout for TCP connection to beanstalkd server.
-    /// Default connection time is `120s`.
-    pub fn connection_timeout(mut self, t: Option<Duration>) -> Self {
-        self.connection_timeout = t;
+    /// Default connection timeout is `120s`.
+    pub fn connection_timeout(mut self, timeout: Option<Duration>) -> Self {
+        self.connection_timeout = timeout;
         self
     }
 
@@ -79,7 +80,7 @@ impl Beanstalkc {
     }
 
     /// Close connection to remote server.
-    pub fn close(&mut self) {}
+    fn close(&mut self) {}
 
     /// Re-connect to the beanstalkd server.
     pub fn reconnect(&mut self) {}
@@ -97,32 +98,37 @@ impl Beanstalkc {
     /// Put a job into the current tube and return the job id.
     pub fn put<T>(
         &self,
-        body: T,
-        priority: u32,
-        delay: Duration,
-        ttr: Duration,
+        _body: T,
+        _priority: u32,
+        _delay: Duration,
+        _ttr: Duration,
     ) -> BeanstalkcResult<u64> {
         Ok(123)
     }
 
     /// Reserve a job from one of those watched tubes. Return a `Job` object if it succeeds.
-    /// Timeout is optional with None.
-    pub fn reserve(&self, timeout: Option<Duration>) -> BeanstalkcResult<Job> {
+    pub fn reserve(&self) -> BeanstalkcResult<Job> {
+        self.reserve_with_timeout(None)
+    }
+
+    /// Reserve a job with given timeout from one of those watched tubes.
+    /// Return a `Job` object if it succeeds.
+    pub fn reserve_with_timeout(&self, _timeout: Option<Duration>) -> BeanstalkcResult<Job> {
         Ok(Job::new(self, 0, String::new(), false))
     }
 
     /// Kick at most `bound` jobs into the ready queue.
-    pub fn kick(&self, bound: u32) -> BeanstalkcResult<()> {
+    pub fn kick(&self, _bound: u32) -> BeanstalkcResult<()> {
         Ok(())
     }
 
     /// Kick a specific job into the ready queue.
-    pub fn kick_job(&self, job_id: u64) -> BeanstalkcResult<()> {
+    pub fn kick_job(&self, _job_id: u64) -> BeanstalkcResult<()> {
         Ok(())
     }
 
     /// Return a specific job.
-    pub fn peek(&self, job_id: u64) -> BeanstalkcResult<Job> {
+    pub fn peek(&self, _job_id: u64) -> BeanstalkcResult<Job> {
         Ok(Job::new(self, 0, String::new(), false))
     }
 
@@ -152,7 +158,7 @@ impl Beanstalkc {
     }
 
     /// Use a given tube.
-    pub fn use_tube(&self, name: &str) -> BeanstalkcResult<()> {
+    pub fn use_tube(&self, _name: &str) -> BeanstalkcResult<()> {
         Ok(())
     }
 
@@ -162,12 +168,12 @@ impl Beanstalkc {
     }
 
     /// Watch a specific tube.
-    pub fn watch(&self, name: &str) -> BeanstalkcResult<()> {
+    pub fn watch(&self, _name: &str) -> BeanstalkcResult<()> {
         Ok(())
     }
 
     /// Stop watching a specific tube.
-    pub fn ignore(&self, name: &str) -> BeanstalkcResult<()> {
+    pub fn ignore(&self, _name: &str) -> BeanstalkcResult<()> {
         Ok(())
     }
 
@@ -177,17 +183,17 @@ impl Beanstalkc {
     }
 
     /// Return a dict of statistical information about the specified tube.
-    pub fn stats_tube(&self, name: &str) -> BeanstalkcResult<HashMap<String, String>> {
+    pub fn stats_tube(&self, _name: &str) -> BeanstalkcResult<HashMap<String, String>> {
         Ok(HashMap::new())
     }
 
     /// Pause the specific tube for `delay` time.
-    pub fn pause_tube(&self, name: &str, delay: Duration) -> BeanstalkcResult<()> {
+    pub fn pause_tube(&self, _name: &str, _delay: Duration) -> BeanstalkcResult<()> {
         Ok(())
     }
 
     /// Delete job by job id.
-    pub fn delete(&self, job_id: u64) -> BeanstalkcResult<()> {
+    pub fn delete(&self, _job_id: u64) -> BeanstalkcResult<()> {
         Ok(())
     }
 
@@ -197,7 +203,7 @@ impl Beanstalkc {
     }
 
     /// Release a reserved job back into the ready queue.
-    pub fn release(&self, job_id: u64, priority: u32, delay: Duration) -> BeanstalkcResult<()> {
+    pub fn release(&self, _job_id: u64, _priority: u32, _delay: Duration) -> BeanstalkcResult<()> {
         Ok(())
     }
 
@@ -207,18 +213,18 @@ impl Beanstalkc {
     }
 
     /// Bury a specific job.
-    pub fn bury(&self, job_id: u64, priority: u32) -> BeanstalkcResult<()> {
+    pub fn bury(&self, _job_id: u64, _priority: u32) -> BeanstalkcResult<()> {
         Ok(())
     }
 
     /// Touch a job by `job_id`. Allowing the worker to request more time on a reserved
     /// job before it expires.
-    pub fn touch(&self, job_id: u64) -> BeanstalkcResult<()> {
+    pub fn touch(&self, _job_id: u64) -> BeanstalkcResult<()> {
         Ok(())
     }
 
     /// Return a dict of statistical information about a job.
-    pub fn stats_job(&self, job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
+    pub fn stats_job(&self, _job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
         Ok(HashMap::new())
     }
 }
@@ -226,5 +232,11 @@ impl Beanstalkc {
 impl Drop for Beanstalkc {
     fn drop(&mut self) {
         self.close();
+    }
+}
+
+impl Default for Beanstalkc {
+    fn default() -> Self {
+        Beanstalkc::new()
     }
 }
