@@ -9,10 +9,8 @@ fn main() {
         .connect()
         .expect("connection failed");
 
-    conn.put_default(b"hello");
-    //    conn.put_default("world".as_bytes());
-    //    conn.put_default(String::from("rust beanstalkd").as_bytes());
-    conn.reserve();
-    conn.stats();
-    //    conn.reserve_with_timeout(time::Duration::from_secs(10));
+    println!("{:?}", conn.put_default(b"hello"));
+    println!("{}", conn.reserve().unwrap());
+    println!("{:?}", conn.peek_buried());
+    print!("{:#?}", conn.stats());
 }

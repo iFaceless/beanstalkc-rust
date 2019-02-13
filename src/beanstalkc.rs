@@ -1,17 +1,16 @@
 use std::collections::HashMap;
-use std::net::SocketAddr;
 use std::net::TcpStream;
 use std::net::ToSocketAddrs;
 use std::time::Duration;
 
 use bufstream::BufStream;
 
+use crate::command;
 use crate::config::*;
 use crate::error::{BeanstalkcError, BeanstalkcResult};
 use crate::job::Job;
-use crate::command;
 use crate::request::Request;
-use crate::request::Response;
+use crate::response::Response;
 
 /// `Beanstalkc` provides beanstalkd client operations.
 #[derive(Debug)]
@@ -115,57 +114,71 @@ impl Beanstalkc {
         delay: Duration,
         ttr: Duration,
     ) -> BeanstalkcResult<u64> {
-        self.send(command::put(body, priority, delay, ttr));
-        Ok(123)
+        self.send(command::put(body, priority, delay, ttr))
+            .map(|r| r.params[0])
     }
 
     /// Reserve a job from one of those watched tubes. Return a `Job` object if it succeeds.
     pub fn reserve(&mut self) -> BeanstalkcResult<Job> {
-        self.send(command::reserve(None));
-        Ok(Job::new(self, 0, String::new(), true))
+        let resp = self.send(command::reserve(None))?;
+        Ok(Job::new(
+            self,
+            resp.params[0],
+            resp.body.unwrap_or_default(),
+            true,
+        ))
     }
 
     /// Reserve a job with given timeout from one of those watched tubes.
     /// Return a `Job` object if it succeeds.
     pub fn reserve_with_timeout(&mut self, timeout: Duration) -> BeanstalkcResult<Job> {
-        self.send(command::reserve(Some(timeout)));
-        Ok(Job::new(self, 0, String::new(), true))
+        let resp = self.send(command::reserve(Some(timeout)))?;
+        Ok(Job::new(
+            self,
+            resp.params[0],
+            resp.body.unwrap_or_default(),
+            true,
+        ))
     }
 
     /// Kick at most `bound` jobs into the ready queue.
-    pub fn kick(&mut self, bound: u32) -> BeanstalkcResult<()> {
-        self.send(command::kick(bound));
-        Ok(())
+    pub fn kick(&mut self, bound: u32) -> BeanstalkcResult<u64> {
+        self.send(command::kick(bound)).map(|r| r.params[0])
     }
 
     /// Kick a specific job into the ready queue.
     pub fn kick_job(&mut self, job_id: u64) -> BeanstalkcResult<()> {
-        self.send(command::kick_job(job_id));
-        Ok(())
+        self.send(command::kick_job(job_id)).map(|_| ())
     }
 
     /// Return a specific job.
     pub fn peek(&mut self, job_id: u64) -> BeanstalkcResult<Job> {
-        self.send(command::peek_job(job_id));
-        Ok(Job::new(self, 0, String::new(), false))
+        self.do_peek(command::peek_job(job_id))
     }
 
     /// Return the next ready job.
     pub fn peek_ready(&mut self) -> BeanstalkcResult<Job> {
-        self.send(command::peek_ready());
-        Ok(Job::new(self, 0, String::new(), false))
+        self.do_peek(command::peek_ready())
     }
 
     /// Return the delayed job with the shortest delay left.
     pub fn peek_delayed(&mut self) -> BeanstalkcResult<Job> {
-        self.send(command::peek_delayed());
-        Ok(Job::new(self, 0, String::new(), false))
+        self.do_peek(command::peek_delayed())
     }
 
     /// Return the next job in the list of buried jobs.
     pub fn peek_buried(&mut self) -> BeanstalkcResult<Job> {
-        self.send(command::peek_buried());
-        Ok(Job::new(self, 0, String::new(), false))
+        self.do_peek(command::peek_buried())
+    }
+
+    pub fn do_peek(&mut self, cmd: command::Command) -> BeanstalkcResult<Job> {
+        let resp = self.send(cmd)?;
+        Ok(Job::new(
+            self,
+            resp.params[0],
+            resp.body.unwrap_or_default(),
+            false,
+        ))
     }
 
     /// Return a list of all existing tubes.
@@ -206,8 +219,7 @@ impl Beanstalkc {
 
     /// Return a dict of statistical information about the beanstalkd server.
     pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats());
-        Ok(HashMap::new())
+        self.send(command::stats()).map(|r|r.body_as_btree_map())
     }
 
     /// Return a dict of statistical information about the specified tube.
@@ -229,7 +241,7 @@ impl Beanstalkc {
     }
 
     /// Release a reserved job back into the ready queue with default priority and delay.
-    pub fn release_default(&self, job_id: u64) -> BeanstalkcResult<()> {
+    pub fn release_default(&mut self, job_id: u64) -> BeanstalkcResult<()> {
         self.release(job_id, DEFAULT_JOB_PRIORITY, DEFAULT_JOB_DELAY)
     }
 
@@ -266,8 +278,6 @@ impl Beanstalkc {
     fn send(&mut self, cmd: command::Command) -> BeanstalkcResult<Response> {
         let mut request = Request::new(self.stream.as_mut().unwrap());
         let resp = request.send(cmd.build().as_bytes())?;
-
-        println!("{:#?}", resp);
 
         if cmd.expected_ok_status.contains(&resp.status) {
             Ok(resp)

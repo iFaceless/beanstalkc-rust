@@ -44,8 +44,9 @@ pub use crate::beanstalkc::Beanstalkc;
 pub use crate::job::Job;
 
 mod beanstalkc;
+mod command;
 mod config;
 mod error;
 mod job;
-mod command;
 mod request;
+mod response;

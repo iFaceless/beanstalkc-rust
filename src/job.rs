@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::time::Duration;
 
 use crate::config::DEFAULT_JOB_DELAY;
@@ -9,15 +10,25 @@ use crate::Beanstalkc;
 /// `Job` is a simple abstraction about beanstalkd job.
 #[derive(Debug)]
 pub struct Job<'a> {
-    conn: &'a Beanstalkc,
+    conn: &'a mut Beanstalkc,
     job_id: u64,
     body: String,
     reserved: bool,
 }
 
+impl<'a> fmt::Display for Job<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "Job(id: {}, reserved: {}, body: \"{}\")",
+            self.job_id, self.reserved, self.body
+        )
+    }
+}
+
 impl<'a> Job<'a> {
     /// Initialize and return the `Job` object.
-    pub fn new(conn: &'a Beanstalkc, job_id: u64, body: String, reserved: bool) -> Job {
+    pub fn new(conn: &'a mut Beanstalkc, job_id: u64, body: String, reserved: bool) -> Job {
         Job {
             conn,
             job_id,
@@ -35,7 +46,8 @@ impl<'a> Job<'a> {
 
     /// Release this job back to the ready queue with default priority and delay.
     pub fn release_default(&mut self) -> BeanstalkcResult<()> {
-        self.release(self.priority(), DEFAULT_JOB_DELAY)
+        let priority = self.priority();
+        self.release(priority, DEFAULT_JOB_DELAY)
     }
 
     /// Release this job back to the ready queue with custom priority and delay.
@@ -51,7 +63,8 @@ impl<'a> Job<'a> {
 
     /// Bury this job with default priority.
     pub fn bury_default(&mut self) -> BeanstalkcResult<()> {
-        self.bury(self.priority())
+        let priority = self.priority();
+        self.bury(priority)
     }
 
     /// Bury this job with custom priority.
@@ -66,12 +79,12 @@ impl<'a> Job<'a> {
     }
 
     /// Kick this job to ready queue.
-    pub fn kick(&self) -> BeanstalkcResult<()> {
+    pub fn kick(&mut self) -> BeanstalkcResult<()> {
         self.conn.kick_job(self.job_id)
     }
 
     /// Touch this reserved job, requesting more time to work on it.
-    pub fn touch(&self) -> BeanstalkcResult<()> {
+    pub fn touch(&mut self) -> BeanstalkcResult<()> {
         if !self.reserved {
             return Ok(());
         }
@@ -80,16 +93,16 @@ impl<'a> Job<'a> {
     }
 
     /// Return a dict of statistical information about this job.
-    pub fn stats(&self) -> BeanstalkcResult<HashMap<String, String>> {
+    pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
         self.conn.stats_job(self.job_id)
     }
 
     /// Return the job priority from this job stats. If not found, return the `DEFAULT_JOB_PRIORITY`.
-    fn priority(&self) -> u32 {
-        let stats = self.stats().unwrap_or_else(|_| HashMap::new());
-        match stats.get("pri") {
-            None => DEFAULT_JOB_PRIORITY,
-            Some(pri) => pri.parse().unwrap_or(DEFAULT_JOB_PRIORITY),
-        }
+    fn priority(&mut self) -> u32 {
+        let stats = self.stats().unwrap_or_default();
+        stats
+            .get("pri")
+            .map(|x| x.parse().unwrap_or(DEFAULT_JOB_PRIORITY))
+            .unwrap_or(DEFAULT_JOB_PRIORITY)
     }
 }

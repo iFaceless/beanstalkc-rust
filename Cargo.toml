@@ -6,3 +6,5 @@ edition = "2018"
 
 [dependencies]
 bufstream = "0.1.4"
+serde = "^1.0"
+serde_yaml = "^0.8"

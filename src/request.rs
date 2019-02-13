@@ -4,25 +4,9 @@ use std::str::FromStr;
 
 use bufstream::BufStream;
 
-use crate::error::{BeanstalkcError, BeanstalkcResult};
 use crate::command::Status;
-
-#[derive(Debug)]
-pub struct Response {
-    pub status: Status,
-    pub params: Vec<String>,
-    pub body: Option<String>,
-}
-
-impl Default for Response {
-    fn default() -> Self {
-        Response {
-            status: Status::Ok,
-            params: vec![],
-            body: None,
-        }
-    }
-}
+use crate::error::{BeanstalkcError, BeanstalkcResult};
+use crate::response::Response;
 
 #[derive(Debug)]
 pub struct Request<'b> {
@@ -51,15 +35,20 @@ impl<'b> Request<'b> {
 
         let mut response = Response::default();
         response.status = Status::from_str(line_parts.first().unwrap_or(&""))?;
-        response.params = line_parts[1..].iter().map(|&x| x.to_string()).collect();
+        response.params = line_parts[1..]
+            .iter()
+            // FIXME: handle ParseIntError?
+            .map(|&x| x.parse().unwrap())
+            .collect();
 
-        let body_byte_count: usize = match response.status {
-            Status::Ok => response.params[0].parse()?,
-            Status::Reserved => response.params[1].parse()?,
+        let body_byte_count = match response.status {
+            Status::Ok => response.params[0],
+            Status::Reserved => response.params[1],
+            Status::Found => response.params[1],
             _ => {
                 return Ok(response);
             }
-        };
+        } as usize;
 
         let mut tmp: Vec<u8> = vec![0; body_byte_count + 2]; // +2 trailing line break
         let body = &mut tmp[..];

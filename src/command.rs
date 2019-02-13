@@ -174,7 +174,7 @@ impl<'a> Command<'a> {
 }
 
 // Construct commands
-pub fn put(body: &[u8], priority: u32, delay: Duration, ttr: Duration) -> Command {
+pub fn put<'a>(body: &'a [u8], priority: u32, delay: Duration, ttr: Duration) -> Command<'a> {
     Command::new(
         CommandKind::Put,
         vec![
@@ -188,7 +188,7 @@ pub fn put(body: &[u8], priority: u32, delay: Duration, ttr: Duration) -> Comman
     )
 }
 
-pub fn reserve(timeout: Option<Duration>) -> Command {
+pub fn reserve<'a>(timeout: Option<Duration>) -> Command<'a> {
     Command::new(
         match timeout {
             None => CommandKind::Reserve,
@@ -203,7 +203,7 @@ pub fn reserve(timeout: Option<Duration>) -> Command {
     )
 }
 
-pub fn kick(bound: u32) -> Command {
+pub fn kick<'a>(bound: u32) -> Command<'a> {
     Command::new(
         CommandKind::Kick,
         vec![bound.to_string()],
@@ -213,7 +213,7 @@ pub fn kick(bound: u32) -> Command {
     )
 }
 
-pub fn kick_job(job_id: u64) -> Command {
+pub fn kick_job<'a>(job_id: u64) -> Command<'a> {
     Command::new(
         CommandKind::JobKick,
         vec![job_id.to_string()],
@@ -223,23 +223,23 @@ pub fn kick_job(job_id: u64) -> Command {
     )
 }
 
-pub fn peek_job(job_id: u64) -> Command {
+pub fn peek_job<'a>(job_id: u64) -> Command<'a> {
     peek(CommandKind::PeekJob, vec![job_id.to_string()])
 }
 
-pub fn peek_ready() -> Command {
+pub fn peek_ready<'a>() -> Command<'a> {
     peek(CommandKind::PeekReady, vec![])
 }
 
-pub fn peek_delayed() -> Command {
+pub fn peek_delayed<'a>() -> Command<'a> {
     peek(CommandKind::PeekDelayed, vec![])
 }
 
-pub fn peek_buried() -> Command {
+pub fn peek_buried<'a>() -> Command<'a> {
     peek(CommandKind::PeekBuried, vec![])
 }
 
-fn peek(kind: CommandKind, args: Vec<String>) -> Command {
+fn peek<'a>(kind: CommandKind, args: Vec<String>) -> Command<'a> {
     Command::new(
         kind,
         args,
@@ -249,7 +249,7 @@ fn peek(kind: CommandKind, args: Vec<String>) -> Command {
     )
 }
 
-pub fn tubes() -> Command {
+pub fn tubes<'a>() -> Command<'a> {
     Command::new(
         CommandKind::ListTubes,
         vec![],
@@ -259,7 +259,7 @@ pub fn tubes() -> Command {
     )
 }
 
-pub fn using() -> Command {
+pub fn using<'a>() -> Command<'a> {
     Command::new(
         CommandKind::ListTubeUsed,
         vec![],
@@ -269,7 +269,7 @@ pub fn using() -> Command {
     )
 }
 
-pub fn use_tube(name: &str) -> Command {
+pub fn use_tube<'a>(name: &str) -> Command<'a> {
     Command::new(
         CommandKind::Use,
         vec![name.to_string()],
@@ -279,7 +279,7 @@ pub fn use_tube(name: &str) -> Command {
     )
 }
 
-pub fn watching() -> Command {
+pub fn watching<'a>() -> Command<'a> {
     Command::new(
         CommandKind::ListTubesWatched,
         vec![],
@@ -289,7 +289,7 @@ pub fn watching() -> Command {
     )
 }
 
-pub fn watch(name: &str) -> Command {
+pub fn watch<'a>(name: &str) -> Command<'a> {
     Command::new(
         CommandKind::Watch,
         vec![name.to_string()],
@@ -299,7 +299,7 @@ pub fn watch(name: &str) -> Command {
     )
 }
 
-pub fn ignore(name: &str) -> Command {
+pub fn ignore<'a>(name: &str) -> Command<'a> {
     Command::new(
         CommandKind::Ignore,
         vec![name.to_string()],
@@ -309,11 +309,11 @@ pub fn ignore(name: &str) -> Command {
     )
 }
 
-pub fn stats() -> Command {
+pub fn stats<'a>() -> Command<'a> {
     Command::new(CommandKind::Stats, vec![], None, vec![Status::Ok], vec![])
 }
 
-pub fn stats_tube(name: &str) -> Command {
+pub fn stats_tube<'a>(name: &str) -> Command<'a> {
     Command::new(
         CommandKind::StatsTube,
         vec![name.to_string()],
@@ -323,17 +323,17 @@ pub fn stats_tube(name: &str) -> Command {
     )
 }
 
-pub fn pause_tube(name: &str, delay: Duration) -> Command {
+pub fn pause_tube<'a>(name: &str, delay: Duration) -> Command<'a> {
     Command::new(
         CommandKind::PauseTube,
-        vec![name.to_string()],
+        vec![name.to_string(), delay.as_secs().to_string()],
         None,
         vec![Status::Ok],
         vec![Status::NotFound],
     )
 }
 
-pub fn delete(job_id: u64) -> Command {
+pub fn delete<'a>(job_id: u64) -> Command<'a> {
     Command::new(
         CommandKind::Delete,
         vec![job_id.to_string()],
@@ -343,17 +343,21 @@ pub fn delete(job_id: u64) -> Command {
     )
 }
 
-pub fn release(job_id: u64, priority: u32, delay: Duration) -> Command {
+pub fn release<'a>(job_id: u64, priority: u32, delay: Duration) -> Command<'a> {
     Command::new(
         CommandKind::Release,
-        vec![priority.to_string(), delay.as_secs().to_string()],
+        vec![
+            job_id.to_string(),
+            priority.to_string(),
+            delay.as_secs().to_string(),
+        ],
         None,
         vec![Status::Released, Status::Buried],
         vec![Status::NotFound],
     )
 }
 
-pub fn bury(job_id: u64, priority: u32) -> Command {
+pub fn bury<'a>(job_id: u64, priority: u32) -> Command<'a> {
     Command::new(
         CommandKind::Bury,
         vec![job_id.to_string(), priority.to_string()],
@@ -363,7 +367,7 @@ pub fn bury(job_id: u64, priority: u32) -> Command {
     )
 }
 
-pub fn touch(job_id: u64) -> Command {
+pub fn touch<'a>(job_id: u64) -> Command<'a> {
     Command::new(
         CommandKind::Touch,
         vec![job_id.to_string()],
@@ -373,7 +377,7 @@ pub fn touch(job_id: u64) -> Command {
     )
 }
 
-pub fn stats_job(job_id: u64) -> Command {
+pub fn stats_job<'a>(job_id: u64) -> Command<'a> {
     Command::new(
         CommandKind::JobStats,
         vec![job_id.to_string()],
