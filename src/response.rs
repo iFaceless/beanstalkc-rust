@@ -10,7 +10,7 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn body_as_btree_map(&self) -> HashMap<String, String> {
+    pub fn body_as_map(&self) -> HashMap<String, String> {
         match &self.body {
             None => HashMap::default(),
             Some(b) => serde_yaml::from_str(b.as_str()).unwrap_or_default(),

@@ -219,7 +219,7 @@ impl Beanstalkc {
 
     /// Return a dict of statistical information about the beanstalkd server.
     pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats()).map(|r|r.body_as_btree_map())
+        self.send(command::stats()).map(|r|r.body_as_map())
     }
 
     /// Return a dict of statistical information about the specified tube.
