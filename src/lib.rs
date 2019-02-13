@@ -47,6 +47,5 @@ mod beanstalkc;
 mod config;
 mod error;
 mod job;
-mod proto;
+mod command;
 mod request;
-mod response;

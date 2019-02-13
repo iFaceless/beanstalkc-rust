@@ -7,11 +7,11 @@ use std::time::Duration;
 use bufstream::BufStream;
 
 use crate::config::*;
-use crate::error::BeanstalkcResult;
+use crate::error::{BeanstalkcError, BeanstalkcResult};
 use crate::job::Job;
-use crate::proto::Command;
+use crate::command;
 use crate::request::Request;
-use crate::response::Response;
+use crate::request::Response;
 
 /// `Beanstalkc` provides beanstalkd client operations.
 #[derive(Debug)]
@@ -115,104 +115,116 @@ impl Beanstalkc {
         delay: Duration,
         ttr: Duration,
     ) -> BeanstalkcResult<u64> {
-        self.send_command(Command::put(body, priority, delay, ttr));
+        self.send(command::put(body, priority, delay, ttr));
         Ok(123)
     }
 
     /// Reserve a job from one of those watched tubes. Return a `Job` object if it succeeds.
-    pub fn reserve(&self) -> BeanstalkcResult<Job> {
-        let cmd = Command::reserve(None);
-        println!("{}", cmd.build());
-
+    pub fn reserve(&mut self) -> BeanstalkcResult<Job> {
+        self.send(command::reserve(None));
         Ok(Job::new(self, 0, String::new(), true))
     }
 
     /// Reserve a job with given timeout from one of those watched tubes.
     /// Return a `Job` object if it succeeds.
-    pub fn reserve_with_timeout(&self, timeout: Duration) -> BeanstalkcResult<Job> {
-        let cmd = Command::reserve(Some(timeout));
-        println!("{}", cmd.build());
-
+    pub fn reserve_with_timeout(&mut self, timeout: Duration) -> BeanstalkcResult<Job> {
+        self.send(command::reserve(Some(timeout)));
         Ok(Job::new(self, 0, String::new(), true))
     }
 
     /// Kick at most `bound` jobs into the ready queue.
-    pub fn kick(&self, _bound: u32) -> BeanstalkcResult<()> {
+    pub fn kick(&mut self, bound: u32) -> BeanstalkcResult<()> {
+        self.send(command::kick(bound));
         Ok(())
     }
 
     /// Kick a specific job into the ready queue.
-    pub fn kick_job(&self, _job_id: u64) -> BeanstalkcResult<()> {
+    pub fn kick_job(&mut self, job_id: u64) -> BeanstalkcResult<()> {
+        self.send(command::kick_job(job_id));
         Ok(())
     }
 
     /// Return a specific job.
-    pub fn peek(&self, _job_id: u64) -> BeanstalkcResult<Job> {
+    pub fn peek(&mut self, job_id: u64) -> BeanstalkcResult<Job> {
+        self.send(command::peek_job(job_id));
         Ok(Job::new(self, 0, String::new(), false))
     }
 
     /// Return the next ready job.
-    pub fn peek_ready(&self) -> BeanstalkcResult<Job> {
+    pub fn peek_ready(&mut self) -> BeanstalkcResult<Job> {
+        self.send(command::peek_ready());
         Ok(Job::new(self, 0, String::new(), false))
     }
 
     /// Return the delayed job with the shortest delay left.
-    pub fn peek_delayed(&self) -> BeanstalkcResult<Job> {
+    pub fn peek_delayed(&mut self) -> BeanstalkcResult<Job> {
+        self.send(command::peek_delayed());
         Ok(Job::new(self, 0, String::new(), false))
     }
 
     /// Return the next job in the list of buried jobs.
-    pub fn peek_buried(&self) -> BeanstalkcResult<Job> {
+    pub fn peek_buried(&mut self) -> BeanstalkcResult<Job> {
+        self.send(command::peek_buried());
         Ok(Job::new(self, 0, String::new(), false))
     }
 
     /// Return a list of all existing tubes.
-    pub fn tubes(&self) -> BeanstalkcResult<Vec<String>> {
+    pub fn tubes(&mut self) -> BeanstalkcResult<Vec<String>> {
+        self.send(command::tubes());
         Ok(vec![])
     }
 
     /// Return the tube currently being used.
-    pub fn using(&self) -> BeanstalkcResult<String> {
+    pub fn using(&mut self) -> BeanstalkcResult<String> {
+        self.send(command::using());
         Ok("".to_string())
     }
 
     /// Use a given tube.
-    pub fn use_tube(&self, _name: &str) -> BeanstalkcResult<()> {
+    pub fn use_tube(&mut self, name: &str) -> BeanstalkcResult<()> {
+        self.send(command::use_tube(name));
         Ok(())
     }
 
     /// Return a list of tubes currently being watched.
-    pub fn watching(&self) -> BeanstalkcResult<Vec<String>> {
+    pub fn watching(&mut self) -> BeanstalkcResult<Vec<String>> {
+        self.send(command::watching());
         Ok(vec![])
     }
 
     /// Watch a specific tube.
-    pub fn watch(&self, _name: &str) -> BeanstalkcResult<()> {
+    pub fn watch(&mut self, name: &str) -> BeanstalkcResult<()> {
+        self.send(command::watch(name));
         Ok(())
     }
 
     /// Stop watching a specific tube.
-    pub fn ignore(&self, _name: &str) -> BeanstalkcResult<()> {
+    pub fn ignore(&mut self, name: &str) -> BeanstalkcResult<()> {
+        self.send(command::ignore(name));
         Ok(())
     }
 
     /// Return a dict of statistical information about the beanstalkd server.
-    pub fn stats(&self) -> BeanstalkcResult<HashMap<String, String>> {
+    pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
+        self.send(command::stats());
         Ok(HashMap::new())
     }
 
     /// Return a dict of statistical information about the specified tube.
-    pub fn stats_tube(&self, _name: &str) -> BeanstalkcResult<HashMap<String, String>> {
+    pub fn stats_tube(&mut self, name: &str) -> BeanstalkcResult<HashMap<String, String>> {
+        self.send(command::stats_tube(name));
         Ok(HashMap::new())
     }
 
     /// Pause the specific tube for `delay` time.
-    pub fn pause_tube(&self, _name: &str, _delay: Duration) -> BeanstalkcResult<()> {
+    pub fn pause_tube(&mut self, name: &str, delay: Duration) -> BeanstalkcResult<()> {
+        self.send(command::pause_tube(name, delay));
         Ok(())
     }
 
     /// Delete job by job id.
-    pub fn delete(&self, _job_id: u64) -> BeanstalkcResult<()> {
+    pub fn delete(&mut self, job_id: u64) -> BeanstalkcResult<()> {
+        self.send(command::delete(job_id));
         Ok(())
     }
 
@@ -222,34 +234,51 @@ impl Beanstalkc {
     }
 
     /// Release a reserved job back into the ready queue.
-    pub fn release(&self, _job_id: u64, _priority: u32, _delay: Duration) -> BeanstalkcResult<()> {
+    pub fn release(&mut self, job_id: u64, priority: u32, delay: Duration) -> BeanstalkcResult<()> {
+        self.send(command::release(job_id, priority, delay));
         Ok(())
     }
 
     /// Bury a specific job with default priority.
-    pub fn bury_default(&self, job_id: u64) -> BeanstalkcResult<()> {
+    pub fn bury_default(&mut self, job_id: u64) -> BeanstalkcResult<()> {
         self.bury(job_id, DEFAULT_JOB_PRIORITY)
     }
 
     /// Bury a specific job.
-    pub fn bury(&self, _job_id: u64, _priority: u32) -> BeanstalkcResult<()> {
+    pub fn bury(&mut self, job_id: u64, priority: u32) -> BeanstalkcResult<()> {
+        self.send(command::bury(job_id, priority));
         Ok(())
     }
 
     /// Touch a job by `job_id`. Allowing the worker to request more time on a reserved
     /// job before it expires.
-    pub fn touch(&self, _job_id: u64) -> BeanstalkcResult<()> {
+    pub fn touch(&mut self, job_id: u64) -> BeanstalkcResult<()> {
+        self.send(command::touch(job_id));
         Ok(())
     }
 
     /// Return a dict of statistical information about a job.
-    pub fn stats_job(&self, _job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
+    pub fn stats_job(&mut self, job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
+        self.send(command::stats_job(job_id));
         Ok(HashMap::new())
     }
 
-    fn send_command(&mut self, cmd: Command) -> BeanstalkcResult<Response> {
+    fn send(&mut self, cmd: command::Command) -> BeanstalkcResult<Response> {
         let mut request = Request::new(self.stream.as_mut().unwrap());
-        request.send(cmd.build().as_bytes())
+        let resp = request.send(cmd.build().as_bytes())?;
+
+        println!("{:#?}", resp);
+
+        if cmd.expected_ok_status.contains(&resp.status) {
+            Ok(resp)
+        } else if cmd.expected_error_status.contains(&resp.status) {
+            Err(BeanstalkcError::CommandFailed(format!("{:?}", resp.status)))
+        } else {
+            Err(BeanstalkcError::UnexpectedResponse(format!(
+                "{:?}",
+                resp.status
+            )))
+        }
     }
 }
 
