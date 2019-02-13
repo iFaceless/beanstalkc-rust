@@ -380,4 +380,3 @@ impl<'a> Command<'a> {
         )
     }
 }
-

@@ -10,6 +10,8 @@ use crate::config::*;
 use crate::error::BeanstalkcResult;
 use crate::job::Job;
 use crate::proto::Command;
+use crate::request::Request;
+use crate::response::Response;
 
 /// `Beanstalkc` provides beanstalkd client operations.
 #[derive(Debug)]
@@ -96,7 +98,7 @@ impl Beanstalkc {
     pub fn reconnect(&mut self) {}
 
     /// Put a job into the current tube with default configs. Return job id.
-    pub fn put_default(&self, body: &[u8]) -> BeanstalkcResult<u64> {
+    pub fn put_default(&mut self, body: &[u8]) -> BeanstalkcResult<u64> {
         self.put(
             body,
             DEFAULT_JOB_PRIORITY,
@@ -107,14 +109,13 @@ impl Beanstalkc {
 
     /// Put a job into the current tube and return the job id.
     pub fn put(
-        &self,
+        &mut self,
         body: &[u8],
         priority: u32,
         delay: Duration,
         ttr: Duration,
     ) -> BeanstalkcResult<u64> {
-        let cmd = Command::put(body, priority, delay, ttr);
-        println!("{}", cmd.build());
+        self.send_command(Command::put(body, priority, delay, ttr));
         Ok(123)
     }
 
@@ -244,6 +245,11 @@ impl Beanstalkc {
     /// Return a dict of statistical information about a job.
     pub fn stats_job(&self, _job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
         Ok(HashMap::new())
+    }
+
+    fn send_command(&mut self, cmd: Command) -> BeanstalkcResult<Response> {
+        let mut request = Request::new(self.stream.as_mut().unwrap());
+        request.send(cmd.build().as_bytes())
     }
 }
 

@@ -2,9 +2,9 @@ use beanstalkc::Beanstalkc;
 use std::time;
 
 fn main() {
-    let conn = Beanstalkc::new()
+    let mut conn = Beanstalkc::new()
         .host("localhost")
-        .port(11300)
+        .port(11301)
         .connection_timeout(Some(time::Duration::from_secs(1)))
         .connect()
         .expect("connection failed");
