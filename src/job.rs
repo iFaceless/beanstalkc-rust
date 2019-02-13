@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use crate::config::DEFAULT_JOB_DELAY;
 use crate::config::DEFAULT_JOB_PRIORITY;
-use crate::errors::BeanstalkcResult;
+use crate::error::BeanstalkcResult;
 use crate::Beanstalkc;
 
 /// `Job` is a simple abstraction about beanstalkd job.

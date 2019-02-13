@@ -7,8 +7,9 @@ use std::time::Duration;
 use bufstream::BufStream;
 
 use crate::config::*;
-use crate::errors::BeanstalkcResult;
+use crate::error::BeanstalkcResult;
 use crate::job::Job;
+use crate::proto::Command;
 
 /// `Beanstalkc` provides beanstalkd client operations.
 #[derive(Debug)]
@@ -95,7 +96,7 @@ impl Beanstalkc {
     pub fn reconnect(&mut self) {}
 
     /// Put a job into the current tube with default configs. Return job id.
-    pub fn put_default<T>(&self, body: T) -> BeanstalkcResult<u64> {
+    pub fn put_default(&self, body: &[u8]) -> BeanstalkcResult<u64> {
         self.put(
             body,
             DEFAULT_JOB_PRIORITY,
@@ -105,25 +106,33 @@ impl Beanstalkc {
     }
 
     /// Put a job into the current tube and return the job id.
-    pub fn put<T>(
+    pub fn put(
         &self,
-        _body: T,
-        _priority: u32,
-        _delay: Duration,
-        _ttr: Duration,
+        body: &[u8],
+        priority: u32,
+        delay: Duration,
+        ttr: Duration,
     ) -> BeanstalkcResult<u64> {
+        let cmd = Command::put(body, priority, delay, ttr);
+        println!("{}", cmd.build());
         Ok(123)
     }
 
     /// Reserve a job from one of those watched tubes. Return a `Job` object if it succeeds.
     pub fn reserve(&self) -> BeanstalkcResult<Job> {
-        self.reserve_with_timeout(None)
+        let cmd = Command::reserve(None);
+        println!("{}", cmd.build());
+
+        Ok(Job::new(self, 0, String::new(), true))
     }
 
     /// Reserve a job with given timeout from one of those watched tubes.
     /// Return a `Job` object if it succeeds.
-    pub fn reserve_with_timeout(&self, _timeout: Option<Duration>) -> BeanstalkcResult<Job> {
-        Ok(Job::new(self, 0, String::new(), false))
+    pub fn reserve_with_timeout(&self, timeout: Duration) -> BeanstalkcResult<Job> {
+        let cmd = Command::reserve(Some(timeout));
+        println!("{}", cmd.build());
+
+        Ok(Job::new(self, 0, String::new(), true))
     }
 
     /// Kick at most `bound` jobs into the ready queue.
