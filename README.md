@@ -38,7 +38,7 @@ fn main() {
         .expect("connection failed");
 
     conn.use_tube("jobs").unwrap();
-    conn.put_default("hello, world").unwrap();
+    conn.put_default(b"hello, world").unwrap();
 }
 ```
 
