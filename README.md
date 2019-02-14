@@ -29,7 +29,7 @@ beanstalkc = "^0.2.0"
 
 # Documentation
 
-Full documentation can be found [here](https://docs.rs/beanstalkc/0.2.0/beanstalkc).
+Full documentation can be found [here](https://docs.rs/beanstalkc/).
 
 # Usage
 
