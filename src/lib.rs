@@ -7,7 +7,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! beanstalkc-rust = "0.1.0"
+//! beanstalkc = "^0.2.0"
 //! ```
 //!
 //! Producer
