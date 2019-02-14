@@ -1,6 +1,6 @@
 [package]
 name = "beanstalkc"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["iFaceless <christopherlee199398@gmail.com>"]
 edition = "2018"
 
