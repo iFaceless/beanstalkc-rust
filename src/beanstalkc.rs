@@ -91,10 +91,15 @@ impl Beanstalkc {
     }
 
     /// Close connection to remote server.
-    fn close(&mut self) {}
+    fn close(&mut self) {
+        self.send(command::quit());
+    }
 
     /// Re-connect to the beanstalkd server.
-    pub fn reconnect(&mut self) {}
+    pub fn reconnect(mut self) -> BeanstalkcResult<Self> {
+        self.close();
+        self.connect()
+    }
 
     /// Put a job into the current tube with default configs. Return job id.
     pub fn put_default(&mut self, body: &[u8]) -> BeanstalkcResult<u64> {
@@ -115,7 +120,7 @@ impl Beanstalkc {
         ttr: Duration,
     ) -> BeanstalkcResult<u64> {
         self.send(command::put(body, priority, delay, ttr))
-            .map(|r| r.params[0])
+            .and_then(|r| r.job_id())
     }
 
     /// Reserve a job from one of those watched tubes. Return a `Job` object if it succeeds.
@@ -123,7 +128,7 @@ impl Beanstalkc {
         let resp = self.send(command::reserve(None))?;
         Ok(Job::new(
             self,
-            resp.params[0],
+            resp.job_id()?,
             resp.body.unwrap_or_default(),
             true,
         ))
@@ -135,7 +140,7 @@ impl Beanstalkc {
         let resp = self.send(command::reserve(Some(timeout)))?;
         Ok(Job::new(
             self,
-            resp.params[0],
+            resp.job_id()?,
             resp.body.unwrap_or_default(),
             true,
         ))
@@ -143,7 +148,8 @@ impl Beanstalkc {
 
     /// Kick at most `bound` jobs into the ready queue.
     pub fn kick(&mut self, bound: u32) -> BeanstalkcResult<u64> {
-        self.send(command::kick(bound)).map(|r| r.params[0])
+        self.send(command::kick(bound))
+            .and_then(|r| r.get_int_param(0))
     }
 
     /// Kick a specific job into the ready queue.
@@ -175,7 +181,7 @@ impl Beanstalkc {
         let resp = self.send(cmd)?;
         Ok(Job::new(
             self,
-            resp.params[0],
+            resp.job_id()?,
             resp.body.unwrap_or_default(),
             false,
         ))
@@ -183,61 +189,56 @@ impl Beanstalkc {
 
     /// Return a list of all existing tubes.
     pub fn tubes(&mut self) -> BeanstalkcResult<Vec<String>> {
-        self.send(command::tubes());
-        Ok(vec![])
+        self.send(command::tubes()).map(|r| r.body_as_vec())
     }
 
     /// Return the tube currently being used.
     pub fn using(&mut self) -> BeanstalkcResult<String> {
-        self.send(command::using());
-        Ok("".to_string())
+        self.send(command::using()).and_then(|r| r.get_param(0))
     }
 
     /// Use a given tube.
-    pub fn use_tube(&mut self, name: &str) -> BeanstalkcResult<()> {
-        self.send(command::use_tube(name));
-        Ok(())
+    pub fn use_tube(&mut self, name: &str) -> BeanstalkcResult<String> {
+        self.send(command::use_tube(name))
+            .and_then(|r| r.get_param(0))
     }
 
     /// Return a list of tubes currently being watched.
     pub fn watching(&mut self) -> BeanstalkcResult<Vec<String>> {
-        self.send(command::watching());
-        Ok(vec![])
+        self.send(command::watching()).map(|r| r.body_as_vec())
     }
 
     /// Watch a specific tube.
-    pub fn watch(&mut self, name: &str) -> BeanstalkcResult<()> {
-        self.send(command::watch(name));
-        Ok(())
+    pub fn watch(&mut self, name: &str) -> BeanstalkcResult<u64> {
+        self.send(command::watch(name))
+            .and_then(|r| r.get_int_param(0))
     }
 
     /// Stop watching a specific tube.
-    pub fn ignore(&mut self, name: &str) -> BeanstalkcResult<()> {
-        self.send(command::ignore(name));
-        Ok(())
+    pub fn ignore(&mut self, name: &str) -> BeanstalkcResult<u64> {
+        self.send(command::ignore(name))
+            .and_then(|r| r.get_int_param(0))
     }
 
     /// Return a dict of statistical information about the beanstalkd server.
     pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats()).map(|r|r.body_as_map())
+        self.send(command::stats()).map(|r| r.body_as_map())
     }
 
     /// Return a dict of statistical information about the specified tube.
     pub fn stats_tube(&mut self, name: &str) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats_tube(name));
-        Ok(HashMap::new())
+        self.send(command::stats_tube(name))
+            .map(|r| r.body_as_map())
     }
 
     /// Pause the specific tube for `delay` time.
     pub fn pause_tube(&mut self, name: &str, delay: Duration) -> BeanstalkcResult<()> {
-        self.send(command::pause_tube(name, delay));
-        Ok(())
+        self.send(command::pause_tube(name, delay)).map(|_| ())
     }
 
     /// Delete job by job id.
     pub fn delete(&mut self, job_id: u64) -> BeanstalkcResult<()> {
-        self.send(command::delete(job_id));
-        Ok(())
+        self.send(command::delete(job_id)).map(|_| ())
     }
 
     /// Release a reserved job back into the ready queue with default priority and delay.
@@ -247,8 +248,8 @@ impl Beanstalkc {
 
     /// Release a reserved job back into the ready queue.
     pub fn release(&mut self, job_id: u64, priority: u32, delay: Duration) -> BeanstalkcResult<()> {
-        self.send(command::release(job_id, priority, delay));
-        Ok(())
+        self.send(command::release(job_id, priority, delay))
+            .map(|_| ())
     }
 
     /// Bury a specific job with default priority.
@@ -258,21 +259,19 @@ impl Beanstalkc {
 
     /// Bury a specific job.
     pub fn bury(&mut self, job_id: u64, priority: u32) -> BeanstalkcResult<()> {
-        self.send(command::bury(job_id, priority));
-        Ok(())
+        self.send(command::bury(job_id, priority)).map(|_| ())
     }
 
     /// Touch a job by `job_id`. Allowing the worker to request more time on a reserved
     /// job before it expires.
     pub fn touch(&mut self, job_id: u64) -> BeanstalkcResult<()> {
-        self.send(command::touch(job_id));
-        Ok(())
+        self.send(command::touch(job_id)).map(|_| ())
     }
 
     /// Return a dict of statistical information about a job.
     pub fn stats_job(&mut self, job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats_job(job_id));
-        Ok(HashMap::new())
+        self.send(command::stats_job(job_id))
+            .map(|r| r.body_as_map())
     }
 
     fn send(&mut self, cmd: command::Command) -> BeanstalkcResult<Response> {

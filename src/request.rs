@@ -35,16 +35,12 @@ impl<'b> Request<'b> {
 
         let mut response = Response::default();
         response.status = Status::from_str(line_parts.first().unwrap_or(&""))?;
-        response.params = line_parts[1..]
-            .iter()
-            // FIXME: handle ParseIntError?
-            .map(|&x| x.parse().unwrap())
-            .collect();
+        response.params = line_parts[1..].iter().map(|&x| x.to_string()).collect();
 
         let body_byte_count = match response.status {
-            Status::Ok => response.params[0],
-            Status::Reserved => response.params[1],
-            Status::Found => response.params[1],
+            Status::Ok => response.get_int_param(0)?,
+            Status::Reserved => response.get_int_param(1)?,
+            Status::Found => response.get_int_param(1)?,
             _ => {
                 return Ok(response);
             }

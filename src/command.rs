@@ -88,6 +88,7 @@ pub enum Status {
     UnknownCommand,
     ExpectedCRLF,
     JobTooBig,
+    Paused,
 }
 
 impl FromStr for Status {
@@ -117,6 +118,7 @@ impl FromStr for Status {
             "UNKNOWN_COMMAND" => Status::UnknownCommand,
             "EXPECTED_CRLF" => Status::ExpectedCRLF,
             "JOB_TOO_BIG" => Status::JobTooBig,
+            "PAUSED" => Status::Paused,
             _ => {
                 return Err(BeanstalkcError::CommandFailed(s.to_string()));
             }
@@ -174,7 +176,7 @@ impl<'a> Command<'a> {
 }
 
 // Construct commands
-pub fn put<'a>(body: &'a [u8], priority: u32, delay: Duration, ttr: Duration) -> Command<'a> {
+pub fn put(body: &[u8], priority: u32, delay: Duration, ttr: Duration) -> Command {
     Command::new(
         CommandKind::Put,
         vec![
@@ -328,7 +330,7 @@ pub fn pause_tube<'a>(name: &str, delay: Duration) -> Command<'a> {
         CommandKind::PauseTube,
         vec![name.to_string(), delay.as_secs().to_string()],
         None,
-        vec![Status::Ok],
+        vec![Status::Paused],
         vec![Status::NotFound],
     )
 }
@@ -384,5 +386,15 @@ pub fn stats_job<'a>(job_id: u64) -> Command<'a> {
         None,
         vec![Status::Ok],
         vec![Status::NotFound],
+    )
+}
+
+pub fn quit<'a>() -> Command<'a> {
+    Command::new(
+        CommandKind::Quit,
+        vec![],
+        None,
+        vec![],
+        vec![],
     )
 }

@@ -24,6 +24,9 @@ Several repos can be found from [here](https://github.com/search?q=beanstalkd+ru
 Full documentation can be found [here]().
 
 # Usage
+
+Full example can be found [here](./examples/main.rs).
+
 ## Producer
 ```rust
 use beanstalkc::Beanstalkc;
