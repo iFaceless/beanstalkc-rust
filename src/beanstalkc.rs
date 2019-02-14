@@ -275,6 +275,10 @@ impl Beanstalkc {
     }
 
     fn send(&mut self, cmd: command::Command) -> BeanstalkcResult<Response> {
+        if self.stream.is_none() {
+            return Err(BeanstalkcError::ConnectionError("invalid connection".to_string()));
+        }
+
         let mut request = Request::new(self.stream.as_mut().unwrap());
         let resp = request.send(cmd.build().as_bytes())?;
 

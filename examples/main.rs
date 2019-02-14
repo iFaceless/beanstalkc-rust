@@ -4,7 +4,7 @@ use std::time;
 fn main() {
     let mut conn = Beanstalkc::new()
         .host("localhost")
-        .port(11301)
+        .port(11300)
         .connection_timeout(Some(time::Duration::from_secs(1)))
         .connect()
         .expect("connection failed");
