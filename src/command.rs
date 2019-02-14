@@ -159,7 +159,7 @@ impl<'a> Command<'a> {
 
         let mut cmd = self.kind.to_string();
 
-        if self.args.len() > 0 {
+        if !self.args.is_empty() {
             cmd = cmd + SPACE + self.args.clone().join(SPACE).as_str();
         }
 
@@ -198,7 +198,7 @@ pub fn reserve<'a>(timeout: Option<Duration>) -> Command<'a> {
         },
         timeout
             .map(|t| vec![t.as_secs().to_string()])
-            .unwrap_or(vec![]),
+            .unwrap_or_else(|| vec![]),
         None,
         vec![Status::Reserved],
         vec![Status::TimedOut, Status::DeadlineSoon],

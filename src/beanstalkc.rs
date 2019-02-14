@@ -90,7 +90,9 @@ impl Beanstalkc {
         Ok(self)
     }
 
+
     /// Close connection to remote server.
+    #[allow(unused_must_use)]
     fn close(&mut self) {
         self.send(command::quit());
     }

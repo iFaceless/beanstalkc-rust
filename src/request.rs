@@ -19,11 +19,11 @@ impl<'b> Request<'b> {
     }
 
     pub fn send(&mut self, message: &[u8]) -> BeanstalkcResult<Response> {
-        self.stream.write(message).unwrap();
-        self.stream.flush().unwrap();
+        let _ = self.stream.write(message)?;
+        self.stream.flush()?;
 
         let mut line = String::new();
-        self.stream.read_line(&mut line);
+        self.stream.read_line(&mut line)?;
 
         if line.trim().is_empty() {
             return Err(BeanstalkcError::UnexpectedResponse(
@@ -48,7 +48,7 @@ impl<'b> Request<'b> {
 
         let mut tmp: Vec<u8> = vec![0; body_byte_count + 2]; // +2 trailing line break
         let body = &mut tmp[..];
-        self.stream.read(body)?;
+        self.stream.read_exact(body)?;
         tmp.truncate(body_byte_count);
         response.body = Some(String::from_utf8(tmp)?);
 
