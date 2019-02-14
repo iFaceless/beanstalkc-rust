@@ -19,6 +19,14 @@ Several repositories can be found from [here](https://github.com/search?q=beanst
 1. Support all the commands defined in the [protocol.txt](https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt);
 1. Well documented.
 
+# Install
+
+Add this dependency to your `Cargo.toml`~
+
+```
+beanstalkc = "^0.2.0"
+```
+
 # Documentation
 
 Full documentation can be found [here](https://docs.rs/beanstalkc/0.2.0/beanstalkc).
