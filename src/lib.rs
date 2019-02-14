@@ -36,8 +36,8 @@
 //!
 //! conn.watch("jobs").unwrap();
 //!
-//! let job = conn.reserve().unwrap();
-//! // process job...
+//! let mut job = conn.reserve().unwrap();
+//! // execute job here...
 //! job.delete().unwrap();
 //! ```
 pub use crate::beanstalkc::Beanstalkc;
