@@ -1,6 +1,7 @@
 language: rust
 script:
   - cargo test
+
 after_success: |
   cargo doc \
   && echo '<meta http-equiv=refresh content=0;url=beanstalkd/index.html>' > target/doc/index.html && \
