@@ -1,6 +1,9 @@
 Beanstalkd Client for Rust
 =========================
 
+[![Build Status](https://travis-ci.org/iFaceless/beanstalkc-rust.svg?branch=master)](https://travis-ci.org/iFaceless/beanstalkc-rust)
+[![](http://meritbadge.herokuapp.com/beanstalkc)](https://crates.io/crates/beanstalkc)
+
 [Beanstalkd](https://github.com/beanstalkd/beanstalkd) is a fast, general-purpose work queue. [beanstalkc-rust](https://github.com/iFaceless/beanstalkc-rust) is a Beanstalkd Client to communicate with Beanstalkd Server based on the protocol defined [here](./protocol.md).
 
 *Inspired by [rust-beanstalkd](https://github.com/schickling/rust-beanstalkd) and [beanstalkc](https://github.com/earl/beanstalkc/).*
