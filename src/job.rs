@@ -11,7 +11,7 @@ use crate::Beanstalkc;
 #[derive(Debug)]
 pub struct Job<'a> {
     conn: &'a mut Beanstalkc,
-    job_id: u64,
+    id: u64,
     body: String,
     reserved: bool,
 }
@@ -21,7 +21,7 @@ impl<'a> fmt::Display for Job<'a> {
         write!(
             f,
             "Job(id: {}, reserved: {}, body: \"{}\")",
-            self.job_id, self.reserved, self.body
+            self.id, self.reserved, self.body
         )
     }
 }
@@ -31,70 +31,180 @@ impl<'a> Job<'a> {
     pub fn new(conn: &'a mut Beanstalkc, job_id: u64, body: String, reserved: bool) -> Job {
         Job {
             conn,
-            job_id,
+            id: job_id,
             body,
             reserved,
         }
     }
 
+    /// Return job id.
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
+    /// Return job body.
+    pub fn body(&self) -> &str {
+        self.body.as_str()
+    }
+
+    /// Return job reserving status.
+    pub fn reserved(&self) -> bool {
+        self.reserved
+    }
+
     /// Delete this job.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.reserve().unwrap();
+    /// job.delete().unwrap();
+    /// ```
     pub fn delete(&mut self) -> BeanstalkcResult<()> {
-        self.conn.delete(self.job_id)?;
+        self.conn.delete(self.id)?;
         self.reserved = false;
         Ok(())
     }
 
     /// Release this job back to the ready queue with default priority and delay.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.reserve().unwrap();
+    /// job.release_default().unwrap();
+    /// ```
     pub fn release_default(&mut self) -> BeanstalkcResult<()> {
         let priority = self.priority();
         self.release(priority, DEFAULT_JOB_DELAY)
     }
 
     /// Release this job back to the ready queue with custom priority and delay.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.reserve().unwrap();
+    /// job.release(0, Duration::from_secs(0)).unwrap();
+    /// ```
     pub fn release(&mut self, priority: u32, delay: Duration) -> BeanstalkcResult<()> {
         if !self.reserved {
             return Ok(());
         }
 
-        self.conn.release(self.job_id, priority, delay)?;
+        self.conn.release(self.id, priority, delay)?;
         self.reserved = false;
         Ok(())
     }
 
     /// Bury this job with default priority.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.reserve().unwrap();
+    /// job.bury_default().unwrap();
+    /// ```
     pub fn bury_default(&mut self) -> BeanstalkcResult<()> {
         let priority = self.priority();
         self.bury(priority)
     }
 
     /// Bury this job with custom priority.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.reserve().unwrap();
+    /// job.bury(1024).unwrap();
+    /// ```
     pub fn bury(&mut self, priority: u32) -> BeanstalkcResult<()> {
         if !self.reserved {
             return Ok(());
         }
 
-        self.conn.bury(self.job_id, priority)?;
+        self.conn.bury(self.id, priority)?;
         self.reserved = false;
         Ok(())
     }
 
     /// Kick this job to ready queue.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.peek_buried().unwrap();
+    /// job.kick().unwrap();
+    /// ```
     pub fn kick(&mut self) -> BeanstalkcResult<()> {
-        self.conn.kick_job(self.job_id)
+        self.conn.kick_job(self.id)
     }
 
     /// Touch this reserved job, requesting more time to work on it.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.reserve().unwrap();
+    /// job.touch().unwrap();
+    /// ```
     pub fn touch(&mut self) -> BeanstalkcResult<()> {
         if !self.reserved {
             return Ok(());
         }
 
-        self.conn.touch(self.job_id)
+        self.conn.touch(self.id)
     }
 
     /// Return a dict of statistical information about this job.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    /// use beanstalkc::Beanstalkc;
+    ///
+    /// let mut conn = Beanstalkc::new().connect().unwrap();
+    ///
+    /// let mut job = conn.peek_ready().unwrap();
+    /// let job_stats = job.stats().unwrap();
+    /// dbg!(job_stats);
+    /// ```
     pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
-        self.conn.stats_job(self.job_id)
+        self.conn.stats_job(self.id)
     }
 
     /// Return the job priority from this job stats. If not found, return the `DEFAULT_JOB_PRIORITY`.

@@ -35,6 +35,9 @@ fn main() {
     dbg!(conn.pause_tube("not-found", time::Duration::from_secs(10)));
 
     let mut job = conn.reserve().unwrap();
+    dbg!(job.id());
+    dbg!(job.body());
+    dbg!(job.reserved());
     dbg!(job.bury_default());
     dbg!(job.kick());
     dbg!(job.touch());
@@ -45,4 +48,7 @@ fn main() {
 
     let mut conn = conn.reconnect().unwrap();
     dbg!(conn.stats());
+
+    let stats = conn.stats().unwrap();
+    dbg!(stats);
 }

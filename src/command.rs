@@ -390,11 +390,5 @@ pub fn stats_job<'a>(job_id: u64) -> Command<'a> {
 }
 
 pub fn quit<'a>() -> Command<'a> {
-    Command::new(
-        CommandKind::Quit,
-        vec![],
-        None,
-        vec![],
-        vec![],
-    )
+    Command::new(CommandKind::Quit, vec![], None, vec![], vec![])
 }
