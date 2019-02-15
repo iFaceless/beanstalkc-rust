@@ -87,6 +87,8 @@ impl Beanstalkc {
     /// Basic usage
     ///
     /// ```no_run
+    /// use beanstalkc::Beanstalkc;
+    ///
     /// let mut conn = Beanstalkc::new().connect().unwrap();
     /// ```
     ///
@@ -504,8 +506,7 @@ impl Beanstalkc {
     ///
     /// let mut conn = Beanstalkc::new().connect().unwrap();
     ///
-    /// let job = conn.reserve().unwrap();
-    /// conn.delete(job.id).unwrap();
+    /// conn.delete(123).unwrap();
     ///
     /// let mut job = conn.reserve().unwrap();
     /// // Recommended way to delete a job

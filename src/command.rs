@@ -392,3 +392,143 @@ pub fn stats_job<'a>(job_id: u64) -> Command<'a> {
 pub fn quit<'a>() -> Command<'a> {
     Command::new(CommandKind::Quit, vec![], None, vec![], vec![])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn test_put() {
+        let cmd = put(
+            b"Rust",
+            0,
+            Duration::from_secs(10),
+            Duration::from_secs(100),
+        );
+        assert_eq!(cmd.build().as_str(), "put 0 10 100 4\r\nRust\r\n")
+    }
+
+    #[test]
+    fn test_reserve() {
+        let cmd = reserve(None);
+        assert_eq!(cmd.build().as_str(), "reserve\r\n");
+
+        let cmd = reserve(Some(Duration::from_secs(10)));
+        assert_eq!(cmd.build().as_str(), "reserve-with-timeout 10\r\n")
+    }
+
+    #[test]
+    fn test_kick() {
+        let cmd = kick(100);
+        assert_eq!(cmd.build().as_str(), "kick 100\r\n");
+    }
+
+    #[test]
+    fn test_kick_job() {
+        let cmd = kick_job(1);
+        assert_eq!(cmd.build().as_str(), "kick-job 1\r\n");
+    }
+
+    #[test]
+    fn test_peek_job() {
+        let cmd = peek_job(1);
+        assert_eq!(cmd.build().as_str(), "peek 1\r\n");
+    }
+
+    #[test]
+    fn test_peek_ready() {
+        let cmd = peek_ready();
+        assert_eq!(cmd.build().as_str(), "peek-ready\r\n");
+    }
+
+    #[test]
+    fn test_peek_buried() {
+        let cmd = peek_buried();
+        assert_eq!(cmd.build().as_str(), "peek-buried\r\n");
+    }
+
+    #[test]
+    fn test_list_tubes() {
+        let cmd = tubes();
+        assert_eq!(cmd.build().as_str(), "list-tubes\r\n");
+    }
+
+    #[test]
+    fn test_tube_used() {
+        let cmd = using();
+        assert_eq!(cmd.build().as_str(), "list-tube-used\r\n");
+    }
+
+    #[test]
+    fn test_use_tube() {
+        let cmd = use_tube("jobs");
+        assert_eq!(cmd.build().as_str(), "use jobs\r\n");
+    }
+
+    #[test]
+    fn test_tubes_watched() {
+        let cmd = watching();
+        assert_eq!(cmd.build().as_str(), "list-tubes-watched\r\n");
+    }
+
+    #[test]
+    fn test_watch() {
+        let cmd = watch("jobs");
+        assert_eq!(cmd.build().as_str(), "watch jobs\r\n");
+    }
+
+    #[test]
+    fn test_ignore() {
+        let cmd = ignore("jobs");
+        assert_eq!(cmd.build().as_str(), "ignore jobs\r\n");
+    }
+
+    #[test]
+    fn test_stats_tube() {
+        let cmd = stats_tube("jobs");
+        assert_eq!(cmd.build().as_str(), "stats-tube jobs\r\n");
+    }
+
+    #[test]
+    fn test_pause_tube() {
+        let cmd = pause_tube("jobs", Duration::from_secs(1));
+        assert_eq!(cmd.build().as_str(), "pause-tube jobs 1\r\n");
+    }
+
+    #[test]
+    fn test_delete() {
+        let cmd = delete(1);
+        assert_eq!(cmd.build().as_str(), "delete 1\r\n");
+    }
+
+    #[test]
+    fn test_release() {
+        let cmd = release(100, 0, Duration::from_secs(100));
+        assert_eq!(cmd.build().as_str(), "release 100 0 100\r\n");
+    }
+
+    #[test]
+    fn test_bury() {
+        let cmd = bury(100, 0);
+        assert_eq!(cmd.build().as_str(), "bury 100 0\r\n");
+    }
+
+    #[test]
+    fn test_touch() {
+        let cmd = touch(100);
+        assert_eq!(cmd.build().as_str(), "touch 100\r\n");
+    }
+
+    #[test]
+    fn test_stats_job() {
+        let cmd = stats_job(100);
+        assert_eq!(cmd.build().as_str(), "stats-job 100\r\n");
+    }
+
+    #[test]
+    fn test_quit() {
+        let cmd = quit();
+        assert_eq!(cmd.build().as_str(), "quit\r\n");
+    }
+}
