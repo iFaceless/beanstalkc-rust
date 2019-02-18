@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Beanstalkc","`Beanstalkc` provides beanstalkd client operations."],["Job","`Job` is a simple abstraction about beanstalkd job."]]});
