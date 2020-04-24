@@ -41,6 +41,7 @@
 //! job.delete().unwrap();
 //! ```
 pub use crate::beanstalkc::Beanstalkc;
+pub use crate::error::{BeanstalkcError, BeanstalkcResult};
 pub use crate::job::Job;
 
 mod beanstalkc;
