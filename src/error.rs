@@ -1,5 +1,6 @@
+use std::error::Error;
 use std::fmt;
-use std::io::Error;
+use std::io;
 use std::net::AddrParseError;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
@@ -23,8 +24,10 @@ impl fmt::Display for BeanstalkcError {
     }
 }
 
-impl From<Error> for BeanstalkcError {
-    fn from(err: Error) -> Self {
+impl Error for BeanstalkcError {}
+
+impl From<io::Error> for BeanstalkcError {
+    fn from(err: io::Error) -> Self {
         BeanstalkcError::ConnectionError(err.to_string())
     }
 }
