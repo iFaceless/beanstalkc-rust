@@ -374,7 +374,7 @@ pub fn touch<'a>(job_id: u64) -> Command<'a> {
         CommandKind::Touch,
         vec![job_id.to_string()],
         None,
-        vec![Status::Ok],
+        vec![Status::Touched],
         vec![Status::NotFound],
     )
 }
