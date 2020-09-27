@@ -213,7 +213,7 @@ impl Beanstalkc {
         Ok(Job::new(
             self,
             resp.job_id()?,
-            resp.body.unwrap_or_default(),
+            Vec::from(resp.body.unwrap_or_default()),
             true,
         ))
     }
@@ -241,7 +241,7 @@ impl Beanstalkc {
         Ok(Job::new(
             self,
             resp.job_id()?,
-            resp.body.unwrap_or_default(),
+            Vec::from(resp.body.unwrap_or_default()),
             true,
         ))
     }
@@ -349,7 +349,7 @@ impl Beanstalkc {
         Ok(Job::new(
             self,
             resp.job_id()?,
-            resp.body.unwrap_or_default(),
+            Vec::from(resp.body.unwrap_or_default()),
             false,
         ))
     }
@@ -367,7 +367,7 @@ impl Beanstalkc {
     /// assert!(tubes.contains(&String::from("default")));
     /// ```
     pub fn tubes(&mut self) -> BeanstalkcResult<Vec<String>> {
-        self.send(command::tubes()).map(|r| r.body_as_vec())
+        Ok(self.send(command::tubes())?.body_as_vec()?)
     }
 
     /// Return the tube currently being used.
@@ -416,7 +416,7 @@ impl Beanstalkc {
     /// assert_eq!(vec!["default".to_string()], tubes);
     /// ```
     pub fn watching(&mut self) -> BeanstalkcResult<Vec<String>> {
-        self.send(command::watching()).map(|r| r.body_as_vec())
+        Ok(self.send(command::watching())?.body_as_vec()?)
     }
 
     /// Watch a specific tube.
@@ -463,7 +463,7 @@ impl Beanstalkc {
     /// dbg!(conn.stats().unwrap());
     /// ```
     pub fn stats(&mut self) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats()).map(|r| r.body_as_map())
+        Ok(self.send(command::stats())?.body_as_map()?)
     }
 
     /// Return a dict of statistical information about the specified tube.
@@ -478,8 +478,7 @@ impl Beanstalkc {
     /// dbg!(conn.stats_tube("default").unwrap());
     /// ```
     pub fn stats_tube(&mut self, name: &str) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats_tube(name))
-            .map(|r| r.body_as_map())
+        Ok(self.send(command::stats_tube(name))?.body_as_map()?)
     }
 
     /// Pause the specific tube for `delay` time.
@@ -607,8 +606,7 @@ impl Beanstalkc {
     /// dbg!(stats);
     /// ```
     pub fn stats_job(&mut self, job_id: u64) -> BeanstalkcResult<HashMap<String, String>> {
-        self.send(command::stats_job(job_id))
-            .map(|r| r.body_as_map())
+        Ok(self.send(command::stats_job(job_id))?.body_as_map()?)
     }
 
     fn send(&mut self, cmd: command::Command) -> BeanstalkcResult<Response> {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
+use std::str;
 
 use crate::config::DEFAULT_JOB_DELAY;
 use crate::config::DEFAULT_JOB_PRIORITY;
@@ -12,7 +13,7 @@ use crate::Beanstalkc;
 pub struct Job<'a> {
     conn: &'a mut Beanstalkc,
     id: u64,
-    body: String,
+    body: Vec<u8>,
     reserved: bool,
 }
 
@@ -20,7 +21,7 @@ impl<'a> fmt::Display for Job<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(
             f,
-            "Job(id: {}, reserved: {}, body: \"{}\")",
+            "Job(id: {}, reserved: {}, body: \"{:?}\")",
             self.id, self.reserved, self.body
         )
     }
@@ -28,7 +29,7 @@ impl<'a> fmt::Display for Job<'a> {
 
 impl<'a> Job<'a> {
     /// Initialize and return the `Job` object.
-    pub fn new(conn: &'a mut Beanstalkc, job_id: u64, body: String, reserved: bool) -> Job {
+    pub fn new(conn: &'a mut Beanstalkc, job_id: u64, body: Vec<u8>, reserved: bool) -> Job {
         Job {
             conn,
             id: job_id,
@@ -43,8 +44,14 @@ impl<'a> Job<'a> {
     }
 
     /// Return job body.
-    pub fn body(&self) -> &str {
-        self.body.as_str()
+    pub fn body(&self) -> &[u8] {
+        &self.body[..]
+    }
+
+    /// Return job body as UTF-8 `&str`  
+    /// This method is just calling `std::str::from_utf8(&self.body)`
+    pub fn body_utf8(&self) -> BeanstalkcResult<&str> {
+        Ok(str::from_utf8(&self.body)?)
     }
 
     /// Return job reserving status.

@@ -1,6 +1,13 @@
-use beanstalkc::Beanstalkc;
+extern crate flate2;
+
 use std::error::Error;
 use std::time;
+use std::io::prelude::*;
+
+use beanstalkc::Beanstalkc;
+use flate2::Compression;
+use flate2::write::GzEncoder;
+use flate2::read::GzDecoder;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut conn = Beanstalkc::new()
@@ -37,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut job = conn.reserve()?;
     dbg!(job.id());
-    dbg!(job.body());
+    dbg!(job.body_utf8())?;
     dbg!(job.reserved());
     dbg!(job.bury_default())?;
     dbg!(job.kick())?;
@@ -46,6 +53,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     dbg!(job.touch())?;
     dbg!(job.release_default())?;
     dbg!(job.delete())?;
+
+    let mut job = conn.reserve()?;
+    dbg!(job.delete())?;
+
+    // should also work with potentially non-UTF-8 payloads
+    // puts a gzip encoded message
+    let mut e = GzEncoder::new(Vec::new(), Compression::default());
+    e.write_all(b"Hello beanstalkc compressed")?;
+    let buf = e.finish()?;
+    dbg!(conn.put_default(&buf))?;
+
+    // tries to read the gzipped encoded message back to a string
+    let mut job = conn.reserve()?;
+    let mut buf = &job.body().to_owned()[..];
+    let mut gz = GzDecoder::new(&mut buf);
+    let mut s = String::new();
+    gz.read_to_string(&mut s)?;
+    dbg!(s);
+    job.delete()?;
 
     let mut conn = conn.reconnect()?;
     dbg!(conn.stats())?;

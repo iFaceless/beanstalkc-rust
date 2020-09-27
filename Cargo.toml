@@ -19,3 +19,6 @@ path = "src/lib.rs"
 bufstream = "0.1.4"
 serde = "^1.0"
 serde_yaml = "^0.8"
+
+[dev-dependencies]
+flate2 = "1.0.17"

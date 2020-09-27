@@ -4,6 +4,7 @@ use std::io;
 use std::net::AddrParseError;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
+use std::str::Utf8Error;
 
 #[derive(Debug, Clone)]
 pub enum BeanstalkcError {
@@ -46,6 +47,12 @@ impl From<ParseIntError> for BeanstalkcError {
 
 impl From<FromUtf8Error> for BeanstalkcError {
     fn from(err: FromUtf8Error) -> Self {
+        BeanstalkcError::UnexpectedResponse(err.to_string())
+    }
+}
+
+impl From<Utf8Error> for BeanstalkcError {
+    fn from(err: Utf8Error) -> Self {
         BeanstalkcError::UnexpectedResponse(err.to_string())
     }
 }
