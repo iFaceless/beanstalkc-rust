@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut job = conn.reserve()?;
     dbg!(job.id());
-    dbg!(job.body_utf8())?;
+    dbg!(std::str::from_utf8(job.body()))?;
     dbg!(job.reserved());
     dbg!(job.bury_default())?;
     dbg!(job.kick())?;

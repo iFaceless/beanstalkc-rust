@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
-use std::str;
 
 use crate::config::DEFAULT_JOB_DELAY;
 use crate::config::DEFAULT_JOB_PRIORITY;
@@ -46,12 +45,6 @@ impl<'a> Job<'a> {
     /// Return job body.
     pub fn body(&self) -> &[u8] {
         &self.body[..]
-    }
-
-    /// Return job body as UTF-8 `&str`  
-    /// This method is just calling `std::str::from_utf8(&self.body)`
-    pub fn body_utf8(&self) -> BeanstalkcResult<&str> {
-        Ok(str::from_utf8(&self.body)?)
     }
 
     /// Return job reserving status.
