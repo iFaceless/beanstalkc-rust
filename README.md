@@ -24,10 +24,12 @@ Several repositories can be found from [here](https://github.com/search?q=beanst
 
 # Install
 
+_**Note**: :) version 1.x is no longer **compatible with the old ones**. Job body now returns raw bytes instead of UTF-8 string. Modification can be found [here](https://github.com/iFaceless/beanstalkc-rust/pull/5)._
+
 Add this dependency to your `Cargo.toml`~
 
 ```
-beanstalkc = "^0.2.0"
+beanstalkc = "^1.0.0"
 ```
 
 # Documentation
