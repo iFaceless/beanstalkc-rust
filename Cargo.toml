@@ -1,7 +1,7 @@
 [package]
 name = "beanstalkc"
-version = "0.2.9"
-authors = ["iFaceless <christopherlee199398@gmail.com>"]
+version = "1.0.0"
+authors = ["ifaceless <me@ifaceles.space>", "polyfloyd", "maxleiko"]
 edition = "2018"
 readme = "README.md"
 description = "Yet another simple Beanstalkd client for Rust."
