@@ -7,7 +7,7 @@ use std::collections::HashMap;
 pub struct Response {
     pub status: Status,
     pub params: Vec<String>,
-    pub body: Option<String>,
+    pub body: Option<Vec<u8>>,
 }
 
 impl Response {
@@ -30,18 +30,26 @@ impl Response {
         }
     }
 
-    pub fn body_as_map(&self) -> HashMap<String, String> {
-        match &self.body {
+    pub fn body_as_map(&self) -> BeanstalkcResult<HashMap<String, String>> {
+        let res = match &self.body {
             None => HashMap::default(),
-            Some(b) => serde_yaml::from_str(b.as_str()).unwrap_or_default(),
-        }
+            Some(b) => {
+                let b = std::str::from_utf8(b)?;
+                serde_yaml::from_str(b).unwrap_or_default()
+            },
+        };
+        Ok(res)
     }
 
-    pub fn body_as_vec(&self) -> Vec<String> {
-        match &self.body {
+    pub fn body_as_vec(&self) -> BeanstalkcResult<Vec<String>> {
+        let res = match &self.body {
             None => Vec::default(),
-            Some(b) => serde_yaml::from_str(b.as_str()).unwrap_or_default(),
-        }
+            Some(b) => {
+                let b = std::str::from_utf8(b)?;
+                serde_yaml::from_str(b).unwrap_or_default()
+            }
+        };
+        Ok(res)
     }
 }
 
@@ -76,7 +84,7 @@ mod tests {
         let resp = Response {
             status: Status::Reserved,
             params: vec!["100".to_string(), "5".to_string()],
-            body: Some("hello".to_string()),
+            body: Some(b"hello".to_vec()),
         };
 
         let r = resp.get_int_param(1);
@@ -89,10 +97,10 @@ mod tests {
         let resp = Response {
             status: Status::Reserved,
             params: vec![],
-            body: Some("- default\n- jobs\n".to_string()),
+            body: Some(b"- default\n- jobs\n".to_vec()),
         };
 
-        let tubes = resp.body_as_vec();
+        let tubes = resp.body_as_vec().unwrap();
         assert_eq!(vec!["default".to_string(), "jobs".to_string()], tubes);
     }
 
@@ -101,10 +109,10 @@ mod tests {
         let resp = Response {
             status: Status::Ok,
             params: vec![],
-            body: Some("name: default\nuptime: 12345".to_string()),
+            body: Some(b"name: default\nuptime: 12345".to_vec()),
         };
 
-        let stats = resp.body_as_map();
+        let stats = resp.body_as_map().unwrap();
         assert_eq!(stats["name"], "default".to_string());
         assert_eq!(stats["uptime"], "12345".to_string());
     }

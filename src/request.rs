@@ -50,7 +50,7 @@ impl<'b> Request<'b> {
         let body = &mut tmp[..];
         self.stream.read_exact(body)?;
         tmp.truncate(body_byte_count);
-        response.body = Some(String::from_utf8(tmp)?);
+        response.body = Some(tmp);
 
         Ok(response)
     }
