@@ -163,11 +163,11 @@ impl<'a> Command<'a> {
             cmd = cmd + SPACE + self.args.clone().join(SPACE).as_str();
         }
 
-        if self.body.is_some() {
-            cmd = cmd + SPACE + self.body.unwrap().len().to_string().as_str() + LINE_BREAK;
+        if let Some(body) = self.body {
+            cmd = cmd + SPACE + body.len().to_string().as_str() + LINE_BREAK;
 
-            let utf8body = unsafe { String::from_utf8_unchecked(self.body.unwrap().to_vec()) };
-            cmd.push_str(utf8body.as_str());
+            let utf8body = String::from_utf8_lossy(body);
+            cmd.push_str(&utf8body);
         }
         cmd.push_str(LINE_BREAK);
 
